@@ -1,6 +1,8 @@
 import argparse
 import torch
 import os
+import onnx
+import onnxoptimizer
 import onnxruntime as ort
 from pyannote.audio import Model
 from loguru import logger
@@ -40,6 +42,11 @@ def main():
     so.optimized_model_filepath = onnx_filepath
     ort.InferenceSession(onnx_filepath, sess_options=so)
     logger.success("export to onnx model success")
+
+    onnx_model = onnx.load(onnx_filepath)
+    passes = ["extract_constant_to_initializer", "eliminate_unused_initializer"]
+    optimized_model = onnxoptimizer.optimize(onnx_model, passes)
+    onnx.save(optimized_model, onnx_filepath)
 
 if __name__ == "__main__":
     main()
